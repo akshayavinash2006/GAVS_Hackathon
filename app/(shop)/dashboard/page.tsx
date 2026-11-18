@@ -2,6 +2,7 @@ import { ArrowRight, ChevronDown, Flame, MessageCircle, PackageX, Sparkles, Turt
 import Link from "next/link";
 import { CreateDraftButton } from "@/components/actions";
 import { CountUp } from "@/components/count-up";
+import { GettingStarted } from "@/components/getting-started";
 import { Tilt } from "@/components/tilt";
 import { Card, BudgetMeter, Empty, SectionTitle } from "@/components/ui";
 import { composeBrief } from "@/lib/brief";
@@ -23,6 +24,8 @@ export default async function Dashboard() {
   const shop = await requireShop();
   const snap = await buildSnapshot(getStore(), shop.id);
   if (!snap) return null;
+  // Brand-new shop with no bills yet: guide them to the first one.
+  if (snap.inventory.length === 0) return <GettingStarted shop={shop} />;
   const L = shop.language;
   const m = snap.metrics;
   const fest = snap.festivals.find((f) => f.days_away <= 14);

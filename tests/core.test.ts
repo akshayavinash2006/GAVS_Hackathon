@@ -21,7 +21,7 @@ function batch(p: Partial<Batch>): Batch {
 function ev(p: Partial<StockEvent>): StockEvent {
   return { id: Math.random().toString(36), shop_id: "s", sku_id: "maggi-70g", type: "level", qty: 0, source: "web", ts: day(-1), ...p };
 }
-const shop: Shop = { id: "s", name: "Test", owner_name: "T", owner_phone: null, locality: "", pincode: "1", region: "south", cluster_id: "c", cash_budget: 10000, language: "en", open_to_joint_orders: true, created_at: day(-60) };
+const shop: Shop = { id: "s", name: "Test", owner_name: "T", owner_phone: null, locality: "", pincode: "1", region: "south", cluster_id: "c", cash_budget: 10000, language: "en", open_to_joint_orders: true, is_demo: false, link_code: null, link_code_expires: null, created_at: day(-60) };
 
 describe("sku matching", () => {
   const m = new SkuMatcher(CATALOG, [{ id: "a", shop_id: "s", sku_id: "surf-excel-500g", alias: "neela packet" }]);
@@ -145,7 +145,7 @@ describe("guardrails", () => {
 
 describe("seeded demo end to end", async () => {
   const store = new MemoryStore();
-  await store.reset(generateSeed(NOW));
+  await store.resetDemo(generateSeed(NOW));
 
   it("tells a coherent story for every shop", async () => {
     for (const s of await store.listShops()) {

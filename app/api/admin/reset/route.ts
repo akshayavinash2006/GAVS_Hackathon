@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   if (!allowed) return Response.json({ error: "Not allowed" }, { status: 403 });
   try {
     const seed = generateSeed();
-    await store.reset(seed);
+    await store.resetDemo(seed);
     return Response.json({ ok: true, shops: seed.shops.length, batches: seed.batches.length, events: seed.events.length });
   } catch (e) {
     return errorResponse(e);

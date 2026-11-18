@@ -1,18 +1,19 @@
 "use client";
 
-import { Check, Loader2, LogOut, RotateCcw } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, LogOut, MessageCircle, RotateCcw, Unlink, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "./actions";
 import { Badge, Card, SectionTitle, btn, input } from "./ui";
 
 interface Props {
-  shop: { cash_budget: number; language: "en" | "hi"; owner_phone: string; open_to_joint_orders: boolean };
-  status: { store: "memory" | "supabase"; gemini: boolean; whatsapp: boolean; whatsappFrom: string | null; canReset: boolean };
+  shop: { name: string; cash_budget: number; language: "en" | "hi"; open_to_joint_orders: boolean };
+  account: { username: string | null; is_demo: boolean; owner_phone: string | null };
+  status: { store: "memory" | "supabase"; gemini: boolean; whatsapp: boolean; canReset: boolean };
   distributors: { name: string; visits: string; returns: boolean }[];
 }
 
-export function SettingsForm({ shop, status, distributors }: Props) {
+export function SettingsForm({ shop, account, status, distributors }: Props) {
   const router = useRouter();
   const [form, setForm] = useState(shop);
   const [busy, setBusy] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function SettingsForm({ shop, status, distributors }: Props) {
     setBusy("save");
     setMsg(null);
     try {
-      await api("/api/settings", { method: "PATCH", body: { ...form, owner_phone: form.owner_phone.trim() } });
+      await api("/api/settings", { method: "PATCH", body: { ...form, shop_name: form.name } });
       setMsg({ ok: true, text: "Saved" });
       router.refresh();
     } catch (e) {
@@ -35,8 +36,15 @@ export function SettingsForm({ shop, status, distributors }: Props) {
   return (
     <div className="space-y-4">
       <h1 className="rise text-2xl font-semibold tracking-tight">Settings</h1>
+
       <Card>
         <div className="space-y-4">
+          {!account.is_demo && (
+            <label className="block text-sm">
+              <span className="font-medium">Shop name</span>
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={input + " mt-1.5"} />
+            </label>
+          )}
           <label className="block text-sm">
             <span className="font-medium">Weekly budget (₹)</span>
             <span className="block text-xs text-ink-3">Hard limit. Only you can change it.</span>
@@ -54,17 +62,6 @@ export function SettingsForm({ shop, status, distributors }: Props) {
               <option value="hi">हिन्दी / Hinglish</option>
             </select>
           </label>
-          <label className="block text-sm">
-            <span className="font-medium">WhatsApp number</span>
-            <span className="block text-xs text-ink-3">7am brief · approves orders</span>
-            <input
-              type="tel"
-              placeholder="+919812345678"
-              value={form.owner_phone}
-              onChange={(e) => setForm({ ...form, owner_phone: e.target.value })}
-              className={input + " mt-1.5"}
-            />
-          </label>
           <label className="flex items-start gap-3 text-sm">
             <input type="checkbox" checked={form.open_to_joint_orders} onChange={(e) => setForm({ ...form, open_to_joint_orders: e.target.checked })} className="mt-0.5 h-5 w-5 accent-[var(--brand)]" />
             <span>
@@ -79,20 +76,29 @@ export function SettingsForm({ shop, status, distributors }: Props) {
         </div>
       </Card>
 
+      <WhatsAppLink phone={account.owner_phone} configured={status.whatsapp} />
+
       <Card>
         <SectionTitle>Suppliers</SectionTitle>
-        <ul className="divide-y divide-line text-sm">
-          {distributors.map((d) => (
-            <li key={d.name} className="flex items-center justify-between gap-2 py-2">
-              <div className="min-w-0">
-                <div className="truncate">{d.name}</div>
-                <div className="text-xs text-ink-3">visits: {d.visits}</div>
-              </div>
-              {d.returns && <Badge tone="neutral" icon={false}>takes returns</Badge>}
-            </li>
-          ))}
-        </ul>
-        
+        {distributors.length === 0 ? (
+          <p className="text-sm text-ink-3">Added automatically when you scan a bill.</p>
+        ) : (
+          <ul className="divide-y divide-line text-sm">
+            {distributors.map((d) => (
+              <li key={d.name} className="flex items-center justify-between gap-2 py-2">
+                <div className="min-w-0">
+                  <div className="truncate">{d.name}</div>
+                  <div className="text-xs text-ink-3">visits: {d.visits}</div>
+                </div>
+                {d.returns && (
+                  <Badge tone="neutral" icon={false}>
+                    takes returns
+                  </Badge>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       <Card>
@@ -111,25 +117,34 @@ export function SettingsForm({ shop, status, distributors }: Props) {
             {status.whatsapp ? <Badge tone="good">connected</Badge> : <Badge tone="warning">not set up</Badge>}
           </li>
         </ul>
-        <div className="mt-3 rounded-2xl bg-surface-2 p-3 text-xs leading-relaxed text-ink-3">
-          <p className="font-medium text-ink">WhatsApp in 3 steps</p>
-          <ol className="mt-1 list-decimal space-y-0.5 pl-4">
-            <li>Save the number above.</li>
-            <li>
-              From that phone, send the sandbox join code to {status.whatsappFrom ? <b>{status.whatsappFrom.replace("whatsapp:", "")}</b> : "your Twilio sandbox number"}.
-            </li>
-            <li>Send a bill photo, &quot;Maggi khatam&quot;, or a voice note. Reply YES to the morning brief to approve.</li>
-          </ol>
-        </div>
       </Card>
 
-      <div className="flex flex-wrap gap-2">
+      <Card>
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-surface-3 text-ink-2">
+            <UserRound className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-medium">{account.is_demo ? "Demo shop" : account.username}</div>
+            <div className="text-xs text-ink-3">{account.is_demo ? "Anyone can open this shop" : "Logged in"}</div>
+          </div>
+          <button
+            className={btn.secondary + " px-3.5"}
+            onClick={async () => {
+              await api("/api/session", { method: "DELETE" });
+              router.push("/");
+              router.refresh();
+            }}
+          >
+            <LogOut className="h-4 w-4" /> {account.is_demo ? "Exit" : "Log out"}
+          </button>
+        </div>
         {status.canReset && (
           <button
-            className={btn.secondary}
+            className={btn.ghost + " mt-3 w-full"}
             disabled={!!busy}
             onClick={async () => {
-              if (!confirm("Reload all three demo shops with fresh data? Your changes will be lost.")) return;
+              if (!confirm("Reload the demo shops with fresh data? Changes to demo shops will be lost.")) return;
               setBusy("reset");
               try {
                 await api("/api/admin/reset");
@@ -145,17 +160,99 @@ export function SettingsForm({ shop, status, distributors }: Props) {
             {busy === "reset" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Reset demo data
           </button>
         )}
-        <button
-          className={btn.secondary}
-          onClick={async () => {
-            await api("/api/session", { method: "DELETE" });
-            router.push("/");
-            router.refresh();
-          }}
-        >
-          <LogOut className="h-4 w-4" /> Switch shop
-        </button>
-      </div>
+      </Card>
     </div>
+  );
+}
+
+function WhatsAppLink({ phone, configured }: { phone: string | null; configured: boolean }) {
+  const router = useRouter();
+  const [code, setCode] = useState<{ code: string; whatsapp_number: string | null; wa_link: string | null } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function getCode() {
+    setBusy(true);
+    setError(null);
+    try {
+      setCode(await api("/api/whatsapp-link"));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section id="whatsapp" className="rise scroll-mt-20 rounded-3xl border border-line bg-surface p-4">
+      <div className="flex items-center gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#25d366]/15">
+          <MessageCircle className="h-5 w-5 text-[#25d366]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium">WhatsApp</div>
+          <div className="truncate text-xs text-ink-3">{phone ? `Linked · ${phone}` : "Morning brief · approve by reply"}</div>
+        </div>
+        {phone && <Badge tone="good">linked</Badge>}
+      </div>
+
+      {!configured ? (
+        <p className="mt-3 text-xs text-ink-3">WhatsApp isn&apos;t set up on this server yet.</p>
+      ) : code ? (
+        <div className="mt-4 space-y-3">
+          <div className="rounded-2xl bg-surface-2 p-4 text-center">
+            <div className="text-xs text-ink-3">Send this from your WhatsApp{code.whatsapp_number ? ` to ${code.whatsapp_number}` : ""}</div>
+            <div className="tabular mt-1 text-3xl font-semibold tracking-[0.15em]">LINK {code.code}</div>
+            <div className="mt-1 text-[11px] text-ink-3">Valid for 15 minutes</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {code.wa_link && (
+              <a href={code.wa_link} target="_blank" rel="noreferrer" className={btn.primary}>
+                <ExternalLink className="h-4 w-4" /> Open WhatsApp
+              </a>
+            )}
+            <button
+              className={btn.secondary}
+              onClick={() => {
+                navigator.clipboard?.writeText(`LINK ${code.code}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <button
+            className={btn.ghost + " w-full"}
+            onClick={() => {
+              setCode(null);
+              router.refresh();
+            }}
+          >
+            I&apos;ve sent it, refresh
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 flex gap-2">
+          <button className={btn.primary + " flex-1"} onClick={getCode} disabled={busy}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} {phone ? "Link a different number" : "Link WhatsApp"}
+          </button>
+          {phone && (
+            <button
+              className={btn.danger + " px-3.5"}
+              aria-label="Unlink"
+              onClick={async () => {
+                await api("/api/whatsapp-link", { method: "DELETE" });
+                router.refresh();
+              }}
+            >
+              <Unlink className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )}
+      {error && <p className="mt-2 text-sm text-critical">{error}</p>}
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { SeedData, Store } from "./store";
-import type { AgentRun, Order, OrderStatus, Shop, Sku } from "../types";
+import type { AgentRun, AppUser, Distributor, Order, OrderStatus, Shop, Sku } from "../types";
 
 // Server-only. Uses the service-role key; every table has RLS enabled with no
 // public policies, so the anon key can read nothing. Never import from a client component.
@@ -49,6 +49,28 @@ export class SupabaseStore implements Store {
     const { data, error } = await this.db.from("shops").select("*").eq("owner_phone", phone).limit(1).maybeSingle();
     if (error) throw new Error(error.message);
     return (data as Shop) ?? null;
+  }
+  async findShopByLinkCode(code: string) {
+    const { data, error } = await this.db.from("shops").select("*").eq("link_code", code).limit(1).maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as Shop) ?? null;
+  }
+  async createShop(shop: Shop, distributors: Distributor[]) {
+    await this.insert("shops", [shop]);
+    await this.insert("distributors", distributors);
+  }
+  async createUser(user: AppUser) {
+    await this.insert("app_users", [user]);
+  }
+  async findUserByUsername(username: string) {
+    const { data, error } = await this.db.from("app_users").select("*").eq("username", username).maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as AppUser) ?? null;
+  }
+  async getUser(id: string) {
+    const { data, error } = await this.db.from("app_users").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as AppUser) ?? null;
   }
   async updateShop(id: string, patch: Partial<Shop>) {
     const { id: _ignore, ...rest } = patch;
@@ -148,11 +170,18 @@ export class SupabaseStore implements Store {
     return `bills/${path}`;
   }
 
-  async reset(data: SeedData) {
-    // Children first, then parents.
-    for (const t of ["agent_runs", "orders", "credit_ledger", "stock_events", "batches", "bills", "sku_aliases", "custom_skus", "distributors", "shops"]) {
-      const { error } = await this.db.from(t).delete().neq("id", "__none__");
-      if (error) throw new Error(`reset ${t}: ${error.message}`);
+  async resetDemo(data: SeedData) {
+    const { data: demoRows, error } = await this.db.from("shops").select("id").eq("is_demo", true);
+    if (error) throw new Error(`resetDemo: ${error.message}`);
+    const ids = [...new Set([...(demoRows ?? []).map((r: { id: string }) => r.id), ...data.shops.map((s) => s.id)])];
+    if (ids.length) {
+      // Children first, then the demo shops themselves. Real shops are never matched.
+      for (const t of ["agent_runs", "orders", "credit_ledger", "stock_events", "batches", "bills", "sku_aliases", "custom_skus", "distributors", "app_users"]) {
+        const { error: e } = await this.db.from(t).delete().in("shop_id", ids);
+        if (e) throw new Error(`resetDemo ${t}: ${e.message}`);
+      }
+      const { error: e } = await this.db.from("shops").delete().in("id", ids);
+      if (e) throw new Error(`resetDemo shops: ${e.message}`);
     }
     await this.insert("shops", data.shops);
     await this.insert("distributors", data.distributors);
@@ -163,5 +192,15 @@ export class SupabaseStore implements Store {
     await this.insert("stock_events", data.events);
     await this.insert("credit_ledger", data.credit);
     await this.insert("orders", data.orders);
+  }
+
+  private schemaOk = false;
+  async checkSchema() {
+    if (this.schemaOk) return;
+    const a = await this.db.from("shops").select("id,is_demo,link_code,link_code_expires").limit(1);
+    if (a.error) throw new Error(`schema: ${a.error.message}`);
+    const b = await this.db.from("app_users").select("id").limit(1);
+    if (b.error) throw new Error(`schema: ${b.error.message}`);
+    this.schemaOk = true;
   }
 }

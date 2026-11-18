@@ -32,14 +32,27 @@ export async function POST(req: Request) {
   const store = getStore();
   await ensureSeeded(store);
   const phone = fromWhatsApp(params.From ?? "");
+
+  // "LINK 123456": prove this number belongs to the shop that issued the code.
+  const link = (params.Body ?? "").match(/^\s*link\s+(\d{6})\s*$/i);
+  if (link && phone) {
+    const target = await store.findShopByLinkCode(link[1]);
+    if (!target || !target.link_code_expires || Date.parse(target.link_code_expires) < Date.now()) {
+      return twiml("That code has expired or is wrong. Get a new one from Settings in the app.");
+    }
+    const previous = await store.findShopByPhone(phone);
+    if (previous && previous.id !== target.id) await store.updateShop(previous.id, { owner_phone: null });
+    await store.updateShop(target.id, { owner_phone: phone, link_code: null, link_code_expires: null });
+    return twiml(`✅ Linked to ${target.name}. You'll get the morning brief here, and you can reply HAAN/YES to approve orders.`);
+  }
   let shop = phone ? await store.findShopByPhone(phone) : null;
   const verifiedOwner = !!shop;
   if (!shop && process.env.WHATSAPP_DEMO_FALLBACK !== "false") {
     // Unknown number: talk to the demo shop (read/update only; approvals need a linked number).
-    const shops = await store.listShops();
-    shop = shops.find((s) => s.id === process.env.WHATSAPP_DEMO_SHOP_ID) ?? shops[0] ?? null;
+    const demos = (await store.listShops()).filter((s) => s.is_demo);
+    shop = demos.find((s) => s.id === process.env.WHATSAPP_DEMO_SHOP_ID) ?? demos[0] ?? null;
   }
-  if (!shop) return twiml("This number isn't linked to a shop yet. Add it in Settings in the Dukaan Saathi app.");
+  if (!shop) return twiml("This number isn't linked to a shop yet. In the app, open Settings → Link WhatsApp to get your code.");
 
   const numMedia = Math.min(3, Number(params.NumMedia ?? 0));
   const work = async () => {

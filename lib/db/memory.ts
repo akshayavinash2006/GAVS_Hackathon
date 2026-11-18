@@ -1,7 +1,7 @@
 import type { SeedData, Store } from "./store";
-import type { AgentRun, Order, OrderStatus, Shop } from "../types";
+import type { AgentRun, AppUser, Distributor, Order, OrderStatus, Shop } from "../types";
 
-type Data = SeedData & { runs: AgentRun[] };
+type Data = SeedData & { runs: AgentRun[]; users: AppUser[] };
 
 const empty = (): Data => ({
   shops: [],
@@ -14,6 +14,7 @@ const empty = (): Data => ({
   aliases: [],
   customSkus: [],
   runs: [],
+  users: [],
 });
 
 /**
@@ -33,6 +34,24 @@ export class MemoryStore implements Store {
   }
   async findShopByPhone(phone: string) {
     return this.d.shops.find((s) => s.owner_phone === phone) ?? null;
+  }
+  async findShopByLinkCode(code: string) {
+    return this.d.shops.find((s) => s.link_code === code) ?? null;
+  }
+  async createShop(shop: Shop, distributors: Distributor[]) {
+    if (this.d.shops.some((s) => s.id === shop.id)) throw new Error("Shop already exists");
+    this.d.shops.push(structuredClone(shop));
+    this.d.distributors.push(...structuredClone(distributors));
+  }
+  async createUser(user: AppUser) {
+    if (this.d.users.some((u) => u.username === user.username)) throw new Error("duplicate key: username");
+    this.d.users.push({ ...user });
+  }
+  async findUserByUsername(username: string) {
+    return this.d.users.find((u) => u.username === username) ?? null;
+  }
+  async getUser(id: string) {
+    return this.d.users.find((u) => u.id === id) ?? null;
   }
   async updateShop(id: string, patch: Partial<Shop>) {
     const s = this.d.shops.find((x) => x.id === id);
@@ -121,7 +140,25 @@ export class MemoryStore implements Store {
       .slice(0, limit);
   }
 
-  async reset(data: SeedData) {
-    this.d = { ...structuredClone(data), runs: [] };
+  async resetDemo(data: SeedData) {
+    const demo = new Set(this.d.shops.filter((s) => s.is_demo).map((s) => s.id));
+    for (const s of data.shops) demo.add(s.id);
+    const keep = <T extends { shop_id?: string | null }>(rows: T[]) => rows.filter((r) => !r.shop_id || !demo.has(r.shop_id));
+    const fresh = structuredClone(data);
+    this.d = {
+      shops: [...this.d.shops.filter((s) => !demo.has(s.id)), ...fresh.shops],
+      distributors: [...keep(this.d.distributors), ...fresh.distributors],
+      batches: [...keep(this.d.batches), ...fresh.batches],
+      events: [...keep(this.d.events), ...fresh.events],
+      bills: [...keep(this.d.bills), ...fresh.bills],
+      credit: [...keep(this.d.credit), ...fresh.credit],
+      orders: [...keep(this.d.orders), ...fresh.orders],
+      aliases: [...this.d.aliases.filter((a) => !a.shop_id || !demo.has(a.shop_id)), ...fresh.aliases],
+      customSkus: [...keep(this.d.customSkus), ...fresh.customSkus],
+      runs: this.d.runs.filter((r) => !demo.has(r.shop_id)),
+      users: this.d.users.filter((u) => !demo.has(u.shop_id)),
+    };
   }
+
+  async checkSchema() {}
 }

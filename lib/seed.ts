@@ -10,7 +10,7 @@ import { addDays, hashString, istDate, rng, round, uid } from "./util";
 // bills, the odd "khatam" / "10 bacha" message, logged expiries and khata entries.
 // The true daily sales are never stored, and the app has to infer them.
 
-const SHOPS: Omit<Shop, "created_at">[] = [
+const SHOPS: Omit<Shop, "created_at" | "is_demo" | "link_code" | "link_code_expires">[] = [
   { id: "shop-sharma", name: "Sharma General Store", owner_name: "Rajesh Sharma", owner_phone: null, locality: "Koramangala 5th Block", pincode: "560095", region: "south", cluster_id: "blr-koramangala", cash_budget: 18000, language: "hi", open_to_joint_orders: true },
   { id: "shop-lakshmi", name: "Sri Lakshmi Kirana", owner_name: "Lakshmi Narayan", owner_phone: null, locality: "Koramangala 6th Block", pincode: "560095", region: "south", cluster_id: "blr-koramangala", cash_budget: 14000, language: "en", open_to_joint_orders: true },
   { id: "shop-balaji", name: "Balaji Provisions", owner_name: "Venkatesh R", owner_phone: null, locality: "Koramangala 7th Block", pincode: "560095", region: "south", cluster_id: "blr-koramangala", cash_budget: 12000, language: "en", open_to_joint_orders: true },
@@ -51,7 +51,7 @@ export function generateSeed(now: Date = new Date()): SeedData {
 
   for (const base of SHOPS) {
     const r = rng(hashString(base.id + istDate(now)));
-    const shop: Shop = { ...base, created_at: addDays(today, -45).toISOString() };
+    const shop: Shop = { ...base, is_demo: true, link_code: null, link_code_expires: null, created_at: addDays(today, -45).toISOString() };
     data.shops.push(shop);
 
     const dists: Distributor[] = DISTRIBUTORS.map((d, i) => ({ ...d, id: `${shop.id}-dist-${i + 1}`, shop_id: shop.id }));

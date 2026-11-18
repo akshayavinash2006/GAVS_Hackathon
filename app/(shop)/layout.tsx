@@ -28,11 +28,11 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
               <span className="block truncate text-xs leading-tight text-ink-3">{shop.locality}</span>
             </span>
           </Link>
-          {store.kind === "memory" && <span className="ml-auto shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-3">demo</span>}
+          {shop.is_demo && <span className="ml-auto shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-3">demo</span>}
           <Link
             href="/settings"
             aria-label={t("settings", L)}
-            className={`${store.kind === "memory" ? "" : "ml-auto"} grid h-9 w-9 place-items-center rounded-xl text-ink-3 transition hover:bg-surface-2 hover:text-ink`}
+            className={`${shop.is_demo ? "" : "ml-auto"} grid h-9 w-9 place-items-center rounded-xl text-ink-3 transition hover:bg-surface-2 hover:text-ink`}
           >
             <Settings className="h-5 w-5" />
           </Link>

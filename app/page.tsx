@@ -1,4 +1,4 @@
-import { ArrowDown, BarChart3, Camera, CheckCheck, MessageCircle, Users } from "lucide-react";
+import { ArrowDown, ArrowRight, BarChart3, Camera, CheckCheck, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { HeroShowcase } from "@/components/hero-showcase";
 import { ShopPicker } from "@/components/shop-picker";
@@ -22,15 +22,18 @@ export default async function Home() {
     if (isMissingSchema(e)) return <SetupNeeded />;
     throw e;
   }
-  const shops = await store.listShops();
+  const shops = (await store.listShops()).filter((s) => s.is_demo);
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 pt-6">
       <header className="relative z-30 flex items-center gap-2.5">
         <span className="btn-glow grid h-9 w-9 place-items-center rounded-xl text-sm font-black text-brand-ink">DS</span>
         <span className="font-semibold tracking-tight">Dukaan Saathi</span>
-        <Link href="/insights" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line bg-bg/40 px-3 py-1.5 text-sm text-ink-2 backdrop-blur transition hover:border-line-strong hover:text-ink">
+        <Link href="/insights" className="ml-auto hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-2 transition hover:text-ink sm:inline-flex">
           <BarChart3 className="h-4 w-4" /> For distributors
+        </Link>
+        <Link href="/login" className="ml-auto inline-flex items-center rounded-full border border-line bg-bg/40 px-4 py-1.5 text-sm font-medium backdrop-blur transition hover:border-line-strong sm:ml-0">
+          Log in
         </Link>
       </header>
 
@@ -47,12 +50,12 @@ export default async function Home() {
             Knows what&apos;s expiring, what&apos;s running out, and what to order, from the bills you already have.
           </p>
           <div className="rise mt-8 flex flex-wrap gap-3" style={{ ["--d" as string]: "180ms" }}>
-            <a href="#demo" className="btn-glow inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-semibold text-brand-ink transition active:scale-95">
-              Open a demo shop <ArrowDown className="h-4 w-4" />
-            </a>
-            <Link href="/insights" className="inline-flex items-center gap-2 rounded-2xl border border-line bg-surface/60 px-5 py-3.5 font-medium backdrop-blur transition hover:border-line-strong">
-              See area demand
+            <Link href="/signup" className="btn-glow inline-flex items-center gap-2 rounded-2xl px-5 py-3.5 font-semibold text-brand-ink transition active:scale-95">
+              Set up your shop <ArrowRight className="h-4 w-4" />
             </Link>
+            <a href="#demo" className="inline-flex items-center gap-2 rounded-2xl border border-line bg-surface/60 px-5 py-3.5 font-medium backdrop-blur transition hover:border-line-strong">
+              Try a demo <ArrowDown className="h-4 w-4" />
+            </a>
           </div>
         </div>
 
@@ -96,8 +99,8 @@ export default async function Home() {
 
         <div id="demo" className="rise min-w-0 scroll-mt-6" style={{ ["--d" as string]: "120ms" }}>
           <Tilt max={4} className="glow-brand border-spin rounded-[2rem] border border-line p-5 sm:p-6">
-            <h2 className="text-xl font-semibold">Open a demo shop</h2>
-            <p className="mb-5 mt-0.5 text-sm text-ink-3">Koramangala, Bengaluru · 6 weeks of data</p>
+            <h2 className="text-xl font-semibold">Try a demo shop</h2>
+            <p className="mb-5 mt-0.5 text-sm text-ink-3">No sign-up · Koramangala, Bengaluru · 6 weeks of data</p>
             <div className="depth-sm">
               <ShopPicker shops={shops.map((s) => ({ id: s.id, name: s.name, owner_name: s.owner_name, locality: s.locality }))} />
             </div>
@@ -113,11 +116,12 @@ function SetupNeeded() {
   return (
     <main className="mx-auto max-w-xl px-4 py-16">
       <h1 className="text-2xl font-semibold">One step left</h1>
-      <p className="mt-2 text-ink-2">Supabase is connected, but the tables don&apos;t exist yet.</p>
+      <p className="mt-2 text-ink-2">Supabase is connected, but some tables or columns are missing.</p>
       <ol className="mt-6 list-decimal space-y-2 pl-5 text-sm text-ink-2">
         <li>Supabase → SQL Editor → New query</li>
         <li>
-          Paste <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">supabase/migrations/0001_init.sql</code> and run it
+          Run <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">supabase/migrations/0001_init.sql</code>, then{" "}
+          <code className="rounded bg-surface-2 px-1.5 py-0.5 text-ink">0002_accounts.sql</code> (skip any you&apos;ve already run)
         </li>
         <li>Reload this page</li>
       </ol>

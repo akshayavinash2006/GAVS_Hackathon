@@ -25,14 +25,15 @@ export function getStore(): Store {
 /** True when Supabase is reachable but the migration hasn't been run. */
 export function isMissingSchema(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : String(e);
-  return /schema cache|does not exist|PGRST205|relation .* does not exist/i.test(msg);
+  return /schema cache|does not exist|PGRST205|PGRST204|42703|relation .* does not exist/i.test(msg);
 }
 
-/** First visit on an empty database loads the demo shops. */
+/** Makes sure the three demo shops exist. Real shops are never touched. */
 export async function ensureSeeded(store: Store = getStore()): Promise<void> {
-  if ((await store.listShops()).length) return;
+  await store.checkSchema();
+  if ((await store.listShops()).some((s) => s.is_demo)) return;
   if (!g.__dukaanSeeding) {
-    g.__dukaanSeeding = store.reset(generateSeed()).finally(() => {
+    g.__dukaanSeeding = store.resetDemo(generateSeed()).finally(() => {
       g.__dukaanSeeding = undefined;
     });
   }

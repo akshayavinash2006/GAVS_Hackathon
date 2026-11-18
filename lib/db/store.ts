@@ -1,5 +1,6 @@
 import type {
   AgentRun,
+  AppUser,
   Batch,
   Bill,
   CreditEntry,
@@ -31,7 +32,13 @@ export interface Store {
   listShops(): Promise<Shop[]>;
   getShop(id: string): Promise<Shop | null>;
   findShopByPhone(phone: string): Promise<Shop | null>;
+  findShopByLinkCode(code: string): Promise<Shop | null>;
+  createShop(shop: Shop, distributors: Distributor[]): Promise<void>;
   updateShop(id: string, patch: Partial<Shop>): Promise<void>;
+
+  createUser(user: AppUser): Promise<void>;
+  findUserByUsername(username: string): Promise<AppUser | null>;
+  getUser(id: string): Promise<AppUser | null>;
 
   listCustomSkus(shopId: string): Promise<Sku[]>;
   addCustomSku(sku: Sku): Promise<void>;
@@ -61,7 +68,11 @@ export interface Store {
   addAgentRun(run: AgentRun): Promise<void>;
   listAgentRuns(shopId: string, limit?: number): Promise<AgentRun[]>;
 
-  reset(data: SeedData): Promise<void>;
+  /** Replaces the demo shops' data only. Real shops and accounts are never touched. */
+  resetDemo(data: SeedData): Promise<void>;
+
+  /** Throws if the database is missing tables/columns this version needs. */
+  checkSchema(): Promise<void>;
 
   /** Optional: keep the original bill/khata photo. Returns the storage path. */
   uploadImage?(path: string, data: Uint8Array, contentType: string): Promise<string>;

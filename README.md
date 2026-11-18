@@ -50,12 +50,13 @@ With no keys set it runs on in-memory demo data (three Koramangala kiranas with 
 
 ## Deploy to Vercel
 
-1. **Supabase**: create a project, then open SQL Editor and run [supabase/migrations/0001_init.sql](supabase/migrations/0001_init.sql). Copy the project URL and the service-role (secret) key.
+1. **Supabase**: create a project, then open SQL Editor and run [0001_init.sql](supabase/migrations/0001_init.sql) followed by [0002_accounts.sql](supabase/migrations/0002_accounts.sql). Copy the project URL and the service-role (secret) key.
 2. **Gemini**: create an API key at https://aistudio.google.com/apikey.
 3. **Vercel**: import the GitHub repo (framework: Next.js, no build settings needed). Add the environment variables:
    - `GEMINI_API_KEY`; optionally `GEMINI_MODEL` (default `gemini-3.8-flash`) and `GEMINI_FALLBACK_MODELS`
    - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (server-only; never prefix with `NEXT_PUBLIC_`)
    - `CRON_SECRET` (any long random string; Vercel Cron sends it automatically)
+   - `SESSION_SECRET` (any long random string; signs login cookies)
 4. Deploy. The first visit seeds the demo shops.
 5. **WhatsApp (optional)**: in the Twilio Console, open Messaging → Try it out → WhatsApp sandbox. Set "When a message comes in" to `https://<app>.vercel.app/api/whatsapp` (POST). Add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_WHATSAPP_FROM` in Vercel, then save the owner's number in the app's Settings and join the sandbox from that phone.
 
@@ -64,9 +65,16 @@ Notes
 - API routes set `maxDuration = 60`. The agent stops starting new steps after 40s and gives up on model calls at 52s, falling back across Gemini models when one is overloaded.
 - Photos are downscaled in the browser before upload, to stay under Vercel's 4.5 MB request limit.
 
+## Accounts and real shops
+
+- **Sign up** at `/signup`: username and password, then shop name, PIN code, weekly budget, language and suppliers. Passwords are scrypt-hashed with a per-user salt; sessions are HMAC-signed cookies ([lib/auth.ts](lib/auth.ts)).
+- **Day 1**: a new shop sees a getting-started checklist. The first scanned bill adds stock and expiry dates; forecasts start from catalog priors and sharpen with every bill and update.
+- **WhatsApp linking**: Settings → Link WhatsApp issues a 6-digit code; the owner sends `LINK 123456` from their phone. Only a linked number can approve orders by replying YES/HAAN.
+- **Neighbours** are grouped by PIN code. Demo shops (`is_demo`) are separate: anyone can open them from the landing page, and "Reset demo data" only ever replaces demo shops.
+
 ## Before using with real shops
 
-- Replace the demo sign-in (pick a shop → httpOnly cookie, [lib/session.ts](lib/session.ts)) with Supabase Auth phone OTP.
+- Add password reset and, ideally, phone OTP login. Login attempts are rate-limited per server instance only.
 - Set `WHATSAPP_DEMO_FALLBACK=false` so unknown numbers can't talk to a demo shop.
 - Verify the lunar festival dates (marked `approx`) each year.
 - Grow the catalog ([data/catalog.ts](data/catalog.ts), ~60 SKUs today) from real distributor price lists; shops also add items and aliases as they scan.

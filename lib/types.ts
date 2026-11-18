@@ -41,6 +41,19 @@ export interface Shop {
   cash_budget: number; // weekly purchase budget set by the owner (₹)
   language: Lang;
   open_to_joint_orders: boolean;
+  is_demo: boolean;
+  /** One-time code the owner sends on WhatsApp ("LINK 123456") to prove they own the number. */
+  link_code: string | null;
+  link_code_expires: string | null;
+  created_at: string;
+}
+
+/** A shop owner's login. One account per shop for now. */
+export interface AppUser {
+  id: string;
+  username: string;
+  password_hash: string; // scrypt$<salt b64>$<hash b64>
+  shop_id: string;
   created_at: string;
 }
 
