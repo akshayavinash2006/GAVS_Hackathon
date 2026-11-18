@@ -2,6 +2,7 @@ import { ArrowRight, ChevronDown, Flame, MessageCircle, PackageX, Sparkles, Turt
 import Link from "next/link";
 import { CreateDraftButton } from "@/components/actions";
 import { CountUp } from "@/components/count-up";
+import { Tilt } from "@/components/tilt";
 import { Card, BudgetMeter, Empty, SectionTitle } from "@/components/ui";
 import { composeBrief } from "@/lib/brief";
 import { getStore } from "@/lib/db";
@@ -52,15 +53,15 @@ export default async function Dashboard() {
       </div>
 
       {/* Hero */}
-      <Card className="glow-critical p-5" delay={60}>
+      <Card className="glow-critical border-spin critical p-5" delay={60} tilt>
         <div className="flex items-center gap-2 text-sm text-ink-2">
           <span className={cn("h-2 w-2 rounded-full bg-critical", m.value_at_risk > 0 && "pulse-dot")} />
           {t("moneyAtRisk", L)}
         </div>
-        <div className="tabular mt-1 text-5xl font-semibold tracking-tight">
+        <div className="depth tabular mt-1 text-5xl font-semibold tracking-tight">
           <CountUp value={m.value_at_risk} prefix="₹" />
         </div>
-        <div className="mt-5 grid grid-cols-3 gap-2">
+        <div className="depth-sm mt-5 grid grid-cols-3 gap-2">
           <HeroPill icon={PackageX} label="Out" value={m.out_count} tone="text-critical" href="/inventory?status=out" />
           <HeroPill icon={Flame} label="Low" value={m.low_count} tone="text-warning-text" href="/inventory?status=low" />
           <HeroPill icon={Turtle} label="Slow" value={inr(m.slow_stock_value)} tone="text-ink-2" href="/inventory?status=slow" />
@@ -89,9 +90,9 @@ export default async function Dashboard() {
             {snap.expiring.slice(0, 8).map((e) => {
               const urgent = e.risk.days_to_expiry <= 7;
               return (
-                <article key={e.risk.batch_id} className="lift w-[15.5rem] shrink-0 snap-start rounded-3xl border border-line bg-surface p-4">
+                <Tilt key={e.risk.batch_id} max={10} className="w-[15.5rem] shrink-0 snap-start rounded-3xl border border-line bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", urgent ? "bg-critical-soft text-critical" : "bg-warning-soft text-warning-text")}>
+                    <div className={cn("depth grid h-12 w-12 shrink-0 place-items-center rounded-2xl shadow-lg shadow-black/40", urgent ? "bg-critical-soft text-critical" : "bg-warning-soft text-warning-text")}>
                       <div className="text-center leading-none">
                         <div className="tabular text-lg font-bold">{e.risk.expired ? "!" : e.risk.days_to_expiry}</div>
                         <div className="text-[9px] font-medium uppercase">{e.risk.expired ? "exp" : "days"}</div>
@@ -106,7 +107,7 @@ export default async function Dashboard() {
                   <div className={cn("mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold", ACTION_STYLE[e.action.kind])} title={e.action.detail}>
                     {e.action.label}
                   </div>
-                </article>
+                </Tilt>
               );
             })}
           </div>
@@ -114,7 +115,7 @@ export default async function Dashboard() {
       </section>
 
       {/* Budget */}
-      <Card delay={200}>
+      <Card delay={200} tilt>
         <BudgetMeter budget={snap.budget} />
       </Card>
 
@@ -145,7 +146,7 @@ export default async function Dashboard() {
       </Card>
 
       {/* Suggested order */}
-      <Card className="glow-brand p-5" delay={280}>
+      <Card className="glow-brand border-spin p-5" delay={280} tilt>
         <div className="flex items-center gap-2 text-sm text-ink-2">
           <Sparkles className="h-4 w-4 text-brand" /> {t("suggested", L)}
         </div>
@@ -154,7 +155,7 @@ export default async function Dashboard() {
         ) : (
           <>
             <div className="mt-1 flex items-end justify-between gap-3">
-              <div className="tabular text-4xl font-semibold tracking-tight">
+              <div className="depth tabular text-4xl font-semibold tracking-tight">
                 <CountUp value={snap.plan.total} prefix="₹" />
               </div>
               <div className="pb-1.5 text-right text-xs text-ink-3">

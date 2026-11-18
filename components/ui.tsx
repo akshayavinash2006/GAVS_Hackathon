@@ -2,10 +2,20 @@ import { AlertTriangle, CheckCircle2, CircleAlert } from "lucide-react";
 import type { BudgetView } from "@/lib/guardrails";
 import { cn, inr } from "@/lib/util";
 import { CountUp } from "./count-up";
+import { Tilt } from "./tilt";
 
-export function Card({ className, children, delay = 0 }: { className?: string; children: React.ReactNode; delay?: number }) {
+export function Card({ className, children, delay = 0, tilt = false }: { className?: string; children: React.ReactNode; delay?: number; tilt?: boolean }) {
+  const delayStyle = { ["--d" as string]: `${delay}ms` };
+  if (tilt) {
+    // Entrance animation on the wrapper; the tilt transform lives on the card itself.
+    return (
+      <section className="rise" style={delayStyle}>
+        <Tilt className={cn("rounded-3xl border border-line bg-surface p-4", className)}>{children}</Tilt>
+      </section>
+    );
+  }
   return (
-    <section className={cn("rise rounded-3xl border border-line bg-surface p-4", className)} style={{ ["--d" as string]: `${delay}ms` }}>
+    <section className={cn("rise rounded-3xl border border-line bg-surface p-4", className)} style={delayStyle}>
       {children}
     </section>
   );

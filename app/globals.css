@@ -175,3 +175,93 @@ textarea {
     animation: none !important;
   }
 }
+
+/* ---------- 3D depth ---------- */
+.tilt {
+  position: relative;
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s;
+  will-change: transform;
+}
+.tilt:hover {
+  transition-duration: 0.12s, 0.3s;
+  box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-strong);
+}
+.tilt:active {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(0.985);
+}
+.tilt-glare {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(26rem circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.09), transparent 45%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tilt:hover .tilt-glare {
+  opacity: 1;
+}
+/* Layers that float above a tilting card */
+.depth {
+  transform: translateZ(45px);
+}
+.depth-sm {
+  transform: translateZ(22px);
+}
+
+/* Animated gradient border (falls back to a static border where @property is unsupported) */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.border-spin::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--angle), transparent 0 55%, var(--brand) 75%, var(--brand-2) 88%, transparent 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: spin-angle 6s linear infinite;
+  pointer-events: none;
+}
+.border-spin.critical::before {
+  background: conic-gradient(from var(--angle), transparent 0 55%, var(--critical) 78%, #fb923c 90%, transparent 100%);
+}
+@keyframes spin-angle {
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* Gentle float for decorative chips */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.floaty {
+  animation: floaty 5s ease-in-out infinite;
+  animation-delay: var(--fd, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .border-spin::before,
+  .floaty {
+    animation: none !important;
+  }
+  .tilt {
+    transform: none !important;
+  }
+}
