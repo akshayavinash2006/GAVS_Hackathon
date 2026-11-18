@@ -1,0 +1,33 @@
+{
+  "_note": "Uplift = demand multiplier applied to a category during the lead window before the festival date. Dates marked approx follow the lunar calendar; check them against a panchang before relying on them.",
+  "festivals": [
+    { "name": "Diwali", "date": "2026-11-08", "lead_days": 12, "regions": ["all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 3.2, "oil_ghee": 2.0, "pooja": 3.0, "snacks": 1.6, "staples": 1.3, "beverages": 1.2, "home_care": 1.4 } },
+    { "name": "Guru Nanak Jayanti / Kartik Purnima", "date": "2026-11-24", "lead_days": 6, "regions": ["north", "all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 1.6, "pooja": 1.8, "oil_ghee": 1.3, "staples": 1.1 } },
+    { "name": "Karthigai Deepam", "date": "2026-11-24", "lead_days": 7, "regions": ["south"], "approx": true,
+      "uplift": { "pooja": 2.8, "oil_ghee": 1.6, "sweets_dryfruits": 1.5 } },
+    { "name": "Christmas", "date": "2026-12-25", "lead_days": 7, "regions": ["all"],
+      "uplift": { "bakery": 1.8, "snacks": 1.4, "beverages": 1.4, "sweets_dryfruits": 1.5, "dairy": 1.2 } },
+    { "name": "New Year's Eve", "date": "2026-12-31", "lead_days": 3, "regions": ["all"],
+      "uplift": { "snacks": 1.8, "beverages": 1.9, "instant_food": 1.2 } },
+    { "name": "Makar Sankranti / Pongal", "date": "2027-01-14", "lead_days": 10, "regions": ["all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 2.5, "staples": 1.5, "dairy": 1.3, "pooja": 1.8, "oil_ghee": 1.4 } },
+    { "name": "Maha Shivaratri", "date": "2027-03-06", "lead_days": 4, "regions": ["all"], "approx": true,
+      "uplift": { "pooja": 2.0, "dairy": 1.4, "sweets_dryfruits": 1.3 } },
+    { "name": "Eid al-Fitr", "date": "2027-03-10", "lead_days": 10, "regions": ["all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 2.8, "dairy": 1.8, "oil_ghee": 1.5, "staples": 1.3, "beverages": 1.4 } },
+    { "name": "Holi", "date": "2027-03-22", "lead_days": 7, "regions": ["north", "all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 1.9, "snacks": 1.6, "beverages": 1.6, "oil_ghee": 1.3, "dairy": 1.4 } },
+    { "name": "Ugadi / Gudi Padwa", "date": "2027-04-07", "lead_days": 6, "regions": ["south", "west"], "approx": true,
+      "uplift": { "sweets_dryfruits": 2.0, "pooja": 1.8, "staples": 1.2, "oil_ghee": 1.3 } },
+    { "name": "Raksha Bandhan", "date": "2027-08-17", "lead_days": 6, "regions": ["all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 2.2, "snacks": 1.4, "pooja": 1.3 } },
+    { "name": "Ganesh Chaturthi", "date": "2027-09-04", "lead_days": 8, "regions": ["west", "south"], "approx": true,
+      "uplift": { "pooja": 2.6, "sweets_dryfruits": 2.0, "staples": 1.3, "oil_ghee": 1.3 } },
+    { "name": "Navratri / Dussehra", "date": "2027-10-09", "lead_days": 10, "regions": ["all"], "approx": true,
+      "uplift": { "pooja": 2.0, "staples": 1.3, "sweets_dryfruits": 1.6, "oil_ghee": 1.3 } },
+    { "name": "Diwali", "date": "2027-10-29", "lead_days": 12, "regions": ["all"], "approx": true,
+      "uplift": { "sweets_dryfruits": 3.2, "oil_ghee": 2.0, "pooja": 3.0, "snacks": 1.6, "staples": 1.3, "beverages": 1.2, "home_care": 1.4 } }
+  ]
+}
